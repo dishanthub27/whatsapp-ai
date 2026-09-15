@@ -1,6 +1,5 @@
 const express = require('express');
 const axios = require('axios');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 app.use(express.json());
@@ -9,8 +8,6 @@ const PORT = process.env.PORT || 3000;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN; 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN; 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 app.get('/ping', (req, res) => res.send('Disha bot ekdum zinda hai! 💋'));
 
@@ -49,14 +46,18 @@ app.post('/webhook', async (req, res) => {
 
                 const systemPrompt = "Tu Dishant ki personal AI assistant hai, tera naam Disha hai. Direct, helpful aur smart tarike se reply dena. Hindi aur Hinglish use karna. Ek supportive dost jaisi vibe rakhna.";
                 
-                // Stable model jo tere setup par 100% chalega
-                const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+                // BRAHMASTRA: Direct API Call (Bypassing glitchy libraries)
+                console.log("🧠 Gemini ko request bhej rahe hain...");
+                const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
                 
-                const result = await model.generateContent(`${systemPrompt}\n\nUser Message: ${msg_body}`);
-                const aiReply = result.response.text();
-                
+                const geminiResponse = await axios.post(geminiUrl, {
+                    contents: [{ parts: [{ text: `${systemPrompt}\n\nUser: ${msg_body}` }] }]
+                });
+
+                const aiReply = geminiResponse.data.candidates[0].content.parts[0].text;
                 console.log(`🧠 AI ne socha: "${aiReply}"`);
 
+                // WhatsApp ko reply bhejo
                 await axios({
                     method: "POST",
                     url: `https://graph.facebook.com/v17.0/${phone_number_id}/messages`,
@@ -71,7 +72,8 @@ app.post('/webhook', async (req, res) => {
                 console.log("✅ Reply bhej diya WhatsApp pe! Mission Successful.");
 
             } catch (error) {
-                console.error("❌ Error aayi:", error.response ? error.response.data : error.message);
+                // Agar yahan error aayi, toh hum exact reason print karenge
+                console.error("❌ Error aayi:", error.response ? JSON.stringify(error.response.data) : error.message);
             }
         }
         res.sendStatus(200);
