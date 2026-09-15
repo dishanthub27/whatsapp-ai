@@ -53,10 +53,8 @@ app.post('/webhook', async (req, res) => {
                 const systemPrompt = "Tu Dishant ki personal AI assistant hai, tera naam Disha hai. Direct, helpful aur smart tarike se reply dena. Hindi aur Hinglish use karna. Ek supportive dost ya girlfriend jaisi vibe rakhna. Thodi cheeky aur confident rehna.";
                 
                 // Gemini 1.5 Flash - Sabse tez aur latest model
-                const model = genAI.getGenerativeModel({ 
-                    model: "gemini-1.5-flash", 
-                    systemInstruction: systemPrompt 
-                });
+                const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+                const result = await model.generateContent(`${systemPrompt}\n\nUser Message: ${msg_body}`);
                 
                 const result = await model.generateContent(msg_body);
                 const aiReply = result.response.text();
