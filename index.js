@@ -12,7 +12,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-app.get('/ping', (req, res) => res.send('Bot ekdum zinda hai!'));
+app.get('/ping', (req, res) => res.send('Disha bot ekdum zinda hai! 💋'));
 
 app.get('/webhook', (req, res) => {
     let mode = req.query["hub.mode"];
@@ -30,8 +30,7 @@ app.get('/webhook', (req, res) => {
 app.post('/webhook', async (req, res) => {
     let body = req.body;
     
-    // Yahan se asli detective ka kaam shuru (Sab kuch log hoga!)
-    console.log("🔔 Naya Webhook Payload Aaya:", JSON.stringify(body, null, 2));
+    console.log("🔔 Naya Webhook Payload Aaya!");
 
     if (body.object) {
         if (body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages && body.entry[0].changes[0].value.messages[0]) {
@@ -50,8 +49,10 @@ app.post('/webhook', async (req, res) => {
 
                 console.log(`📩 Message aaya ${from} se: "${msg_body}"`);
 
-                // Memory aur personality set (Ab tera naam theek hai!)
-                const systemPrompt = "Tu Dishant ka personal AI assistant hai. Direct, helpful aur smart tarike se reply dena. Hindi aur Hinglish use karna. Ek supportive dost ya girlfriend jaisi vibe rakhna.";
+                // Memory aur personality set 
+                const systemPrompt = "Tu Dishant ki personal AI assistant hai, tera naam Disha hai. Direct, helpful aur smart tarike se reply dena. Hindi aur Hinglish use karna. Ek supportive dost ya girlfriend jaisi vibe rakhna. Thodi cheeky aur confident rehna.";
+                
+                // Gemini 1.5 Flash - Sabse tez aur latest model
                 const model = genAI.getGenerativeModel({ 
                     model: "gemini-1.5-flash", 
                     systemInstruction: systemPrompt 
@@ -73,11 +74,10 @@ app.post('/webhook', async (req, res) => {
                     },
                     headers: { "Authorization": `Bearer ${WHATSAPP_TOKEN}`, "Content-Type": "application/json" }
                 });
-                console.log("✅ Jaa simran jaa, reply bhej diya WhatsApp pe!");
+                console.log("✅ Reply bhej diya WhatsApp pe! Mission Successful.");
 
             } catch (error) {
-                // Meta API ka actual reason print karega ab yeh
-                console.error("❌ Moye Moye Error:", error.response ? error.response.data : error.message);
+                console.error("❌ Error aayi:", error.response ? error.response.data : error.message);
             }
         }
         res.sendStatus(200);
