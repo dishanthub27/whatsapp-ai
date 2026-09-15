@@ -29,7 +29,6 @@ app.get('/webhook', (req, res) => {
 
 app.post('/webhook', async (req, res) => {
     let body = req.body;
-    
     console.log("🔔 Naya Webhook Payload Aaya!");
 
     if (body.object) {
@@ -37,7 +36,6 @@ app.post('/webhook', async (req, res) => {
             try {
                 let messageObj = body.entry[0].changes[0].value.messages[0];
                 
-                // Agar message text nahi hai (sticker/image), toh ignore maaro warna code phatega
                 if (messageObj.type !== "text") {
                     console.log("⚠️ Text message nahi tha, isliye ignore kiya.");
                     return res.sendStatus(200);
@@ -49,14 +47,12 @@ app.post('/webhook', async (req, res) => {
 
                 console.log(`📩 Message aaya ${from} se: "${msg_body}"`);
 
-                // Memory aur personality set 
-                const systemPrompt = "Tu Dishant ki personal AI assistant hai, tera naam Disha hai. Direct, helpful aur smart tarike se reply dena. Hindi aur Hinglish use karna. Ek supportive dost ya girlfriend jaisi vibe rakhna. Thodi cheeky aur confident rehna.";
+                const systemPrompt = "Tu Dishant ki personal AI assistant hai, tera naam Disha hai. Direct, helpful aur smart tarike se reply dena. Hindi aur Hinglish use karna. Ek supportive dost jaisi vibe rakhna.";
                 
-                // Gemini 1.5 Flash - Sabse tez aur latest model
+                // Stable model jo tere setup par 100% chalega
                 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-                const result = await model.generateContent(`${systemPrompt}\n\nUser Message: ${msg_body}`);
                 
-                const result = await model.generateContent(msg_body);
+                const result = await model.generateContent(`${systemPrompt}\n\nUser Message: ${msg_body}`);
                 const aiReply = result.response.text();
                 
                 console.log(`🧠 AI ne socha: "${aiReply}"`);
