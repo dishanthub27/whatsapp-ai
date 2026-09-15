@@ -29,15 +29,29 @@ app.get('/webhook', (req, res) => {
 
 app.post('/webhook', async (req, res) => {
     let body = req.body;
+    
+    // Yahan se asli detective ka kaam shuru (Sab kuch log hoga!)
+    console.log("🔔 Naya Webhook Payload Aaya:", JSON.stringify(body, null, 2));
+
     if (body.object) {
         if (body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages && body.entry[0].changes[0].value.messages[0]) {
-            let phone_number_id = body.entry[0].changes[0].value.metadata.phone_number_id;
-            let from = body.entry[0].changes[0].value.messages[0].from; 
-            let msg_body = body.entry[0].changes[0].value.messages[0].text.body;
-
             try {
-                // Yahan teri memory aur personality set hogi (isko hum baad me aur customize kar sakte hain)
-                const systemPrompt = "Tu Nishant ka personal AI assistant hai. Direct, helpful aur smart tarike se reply dena. Hindi aur Hinglish use karna.";
+                let messageObj = body.entry[0].changes[0].value.messages[0];
+                
+                // Agar message text nahi hai (sticker/image), toh ignore maaro warna code phatega
+                if (messageObj.type !== "text") {
+                    console.log("⚠️ Text message nahi tha, isliye ignore kiya.");
+                    return res.sendStatus(200);
+                }
+
+                let phone_number_id = body.entry[0].changes[0].value.metadata.phone_number_id;
+                let from = messageObj.from; 
+                let msg_body = messageObj.text.body;
+
+                console.log(`📩 Message aaya ${from} se: "${msg_body}"`);
+
+                // Memory aur personality set (Ab tera naam theek hai!)
+                const systemPrompt = "Tu Dishant ka personal AI assistant hai. Direct, helpful aur smart tarike se reply dena. Hindi aur Hinglish use karna. Ek supportive dost ya girlfriend jaisi vibe rakhna.";
                 const model = genAI.getGenerativeModel({ 
                     model: "gemini-1.5-flash", 
                     systemInstruction: systemPrompt 
@@ -45,15 +59,25 @@ app.post('/webhook', async (req, res) => {
                 
                 const result = await model.generateContent(msg_body);
                 const aiReply = result.response.text();
+                
+                console.log(`🧠 AI ne socha: "${aiReply}"`);
 
                 await axios({
                     method: "POST",
                     url: `https://graph.facebook.com/v17.0/${phone_number_id}/messages`,
-                    data: { messaging_product: "whatsapp", to: from, text: { body: aiReply } },
+                    data: { 
+                        messaging_product: "whatsapp", 
+                        to: from,
+                        type: "text",
+                        text: { body: aiReply } 
+                    },
                     headers: { "Authorization": `Bearer ${WHATSAPP_TOKEN}`, "Content-Type": "application/json" }
                 });
+                console.log("✅ Jaa simran jaa, reply bhej diya WhatsApp pe!");
+
             } catch (error) {
-                console.error("Error:", error);
+                // Meta API ka actual reason print karega ab yeh
+                console.error("❌ Moye Moye Error:", error.response ? error.response.data : error.message);
             }
         }
         res.sendStatus(200);
